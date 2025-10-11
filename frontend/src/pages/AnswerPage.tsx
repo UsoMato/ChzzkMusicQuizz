@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import YouTubePlayer from '../components/YouTubePlayer';
 import './AnswerPage.css';
@@ -15,11 +15,20 @@ interface Song {
 
 function AnswerPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [song, setSong] = useState<Song | null>(null);
 
   useEffect(() => {
+    // location이 변경될 때마다 (페이지 진입 시마다) 정답 로드
+    console.log('AnswerPage - loading answer, location:', location.pathname);
+    setSong(null); // 이전 노래 정보 초기화
     loadAnswer();
-  }, []);
+
+    return () => {
+      console.log('AnswerPage - cleaning up');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const loadAnswer = async () => {
     try {

@@ -60,6 +60,112 @@
   color: #ffd700;
 }
 
+.controls-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.volume-icon {
+  font-size: 1.5rem;
+}
+
+.volume-slider {
+  flex: 1;
+  max-width: 300px;
+  height: 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #4facfe, #00f2fe);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #4facfe, #00f2fe);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.volume-value {
+  font-weight: bold;
+  min-width: 50px;
+  text-align: right;
+}
+
+.playback-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.control-button {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.control-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.control-button:active {
+  transform: translateY(0);
+}
+
+.play-pause-button {
+  background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+.skip-button {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+}
+
 .chat-info {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -101,6 +207,25 @@
     font-size: 1.2rem;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .volume-control {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .volume-slider {
+    max-width: 100%;
+  }
+
+  .playback-controls {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .control-button {
+    width: 100%;
+    padding: 1rem;
   }
 
   .chat-info {

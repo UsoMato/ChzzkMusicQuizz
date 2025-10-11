@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '../components/CircularProgress';
-import YouTubePlayer from '../components/YouTubePlayer';
+import YouTubePlayer, { YouTubePlayerHandle } from '../components/YouTubePlayer';
 import './GamePage.css';
 
 interface Song {
@@ -15,22 +15,45 @@ interface Song {
 
 function GamePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [song, setSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [volume, setVolume] = useState(100); // 볼륨 (0-100)
   const [duration] = useState(30); // 30초 재생
   const [hintDelay] = useState(15); // 15초 후 힌트 표시
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const hintTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const hintTimerRef = useRef<number | null>(null);
+  const youtubePlayerRef = useRef<YouTubePlayerHandle>(null);
 
   useEffect(() => {
+    // location이 변경될 때마다 (페이지 진입 시마다) 노래 로드 및 초기화
+    console.log('GamePage - loading song, location:', location.pathname);
+    setSong(null);
+    setProgress(0);
+    setShowHint(false);
+    setIsPlaying(false);
+
+    // 기존 타이머 정리
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (hintTimerRef.current) {
+      clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = null;
+    }
+
     loadCurrentSong();
+
     return () => {
+      console.log('GamePage - cleaning up');
       if (timerRef.current) clearInterval(timerRef.current);
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const loadCurrentSong = async () => {
     try {
@@ -86,8 +109,37 @@ function GamePage() {
     if (isPlaying) {
       stopPlaying();
     } else {
-      startPlaying();
+      // progress가 100%면 처음부터 다시 시작
+      if (progress >= 100) {
+        // YouTube 플레이어를 처음으로 되돌림
+        if (youtubePlayerRef.current) {
+          youtubePlayerRef.current.seekTo(0);
+        }
+        startPlaying();
+      } else {
+        // 일시정지 상태에서 재개할 때는 타이머만 다시 시작
+        setIsPlaying(true);
+        timerRef.current = setInterval(() => {
+          setProgress((prev) => {
+            if (prev >= 100) {
+              stopPlaying();
+              return 100;
+            }
+            return prev + (100 / duration);
+          });
+        }, 1000);
+      }
     }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseInt(e.target.value);
+    setVolume(newVolume);
+  };
+
+  const handleSkip = () => {
+    stopPlaying();
+    navigate('/answer');
   };
 
   // 치지직 채팅 연동 placeholder
@@ -152,6 +204,36 @@ function GamePage() {
           )}
         </div>
 
+        <div className="controls-section">
+          <div className="volume-control">
+            <span className="volume-icon">🔊</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="volume-slider"
+            />
+            <span className="volume-value">{volume}%</span>
+          </div>
+
+          <div className="playback-controls">
+            <button
+              className="control-button play-pause-button"
+              onClick={handleTogglePlay}
+            >
+              {isPlaying ? '⏸ 일시정지' : '▶ 재생'}
+            </button>
+            <button
+              className="control-button skip-button"
+              onClick={handleSkip}
+            >
+              ⏭ 스킵
+            </button>
+          </div>
+        </div>
+
         <div className="chat-info">
           <p>💬 채팅으로 정답을 입력해주세요!</p>
           <p className="chat-subinfo">치지직 채팅 연동 대기 중...</p>
@@ -160,8 +242,10 @@ function GamePage() {
         {/* 숨겨진 YouTube 플레이어 */}
         <div style={{ display: 'none' }}>
           <YouTubePlayer
+            ref={youtubePlayerRef}
             url={song.youtube_url}
             playing={isPlaying}
+            volume={volume}
             onEnded={stopPlaying}
           />
         </div>
