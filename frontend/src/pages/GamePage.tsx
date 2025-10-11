@@ -11,6 +11,7 @@ interface Song {
   genre: string;
   hint: string | null;
   artist: string;
+  start_time: number; // 재생 시작 지점 (초)
 }
 
 function GamePage() {
@@ -71,6 +72,11 @@ function GamePage() {
     setProgress(0);
     setShowHint(false);
 
+    // YouTube 플레이어를 시작 지점으로 이동
+    if (song && song.start_time > 0 && youtubePlayerRef.current) {
+      youtubePlayerRef.current.seekTo(song.start_time);
+    }
+
     // 진행바 타이머
     timerRef.current = setInterval(() => {
       setProgress((prev) => {
@@ -109,11 +115,11 @@ function GamePage() {
     if (isPlaying) {
       stopPlaying();
     } else {
-      // progress가 100%면 처음부터 다시 시작
+      // progress가 100%면 시작 지점부터 다시 시작
       if (progress >= 100) {
-        // YouTube 플레이어를 처음으로 되돌림
-        if (youtubePlayerRef.current) {
-          youtubePlayerRef.current.seekTo(0);
+        // YouTube 플레이어를 시작 지점으로 되돌림
+        if (song && youtubePlayerRef.current) {
+          youtubePlayerRef.current.seekTo(song.start_time || 0);
         }
         startPlaying();
       } else {
@@ -246,6 +252,7 @@ function GamePage() {
             url={song.youtube_url}
             playing={isPlaying}
             volume={volume}
+            startTime={song.start_time}
             onEnded={stopPlaying}
           />
         </div>

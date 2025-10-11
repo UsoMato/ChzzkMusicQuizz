@@ -68,8 +68,9 @@ npm install
 `songs.csv` 파일에 노래 정보를 입력합니다:
 
 ```csv
-title,youtube_url,artist,genre,hint
-Dynamite,https://www.youtube.com/watch?v=gdZLi9oWNZg,BTS,K-Pop,다이너마이트
+title,youtube_url,artist,genre,hint,start_time
+Dynamite,https://www.youtube.com/watch?v=gdZLi9oWNZg,BTS,K-Pop,다이너마이트,0
+Butter,https://www.youtube.com/watch?v=WMweEpGlu_U,BTS,K-Pop,버터처럼 부드럽게,10
 ```
 
 **CSV 열 설명:**
@@ -79,6 +80,7 @@ Dynamite,https://www.youtube.com/watch?v=gdZLi9oWNZg,BTS,K-Pop,다이너마이�
 - `artist`: 아티스트명
 - `genre`: 장르
 - `hint`: 힌트 메시지
+- `start_time`: 재생 시작 지점 (초 단위, 0이면 처음부터)
 
 ### 4. 개발 서버 실행
 

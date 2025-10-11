@@ -1,6 +1,6 @@
-title,youtube_url,artist,genre,hint
-Dynamite,https://www.youtube.com/watch?v=gdZLi9oWNZg,BTS,K-Pop,다이너마이트
-Butter,https://www.youtube.com/watch?v=WMweEpGlu_U,BTS,K-Pop,버터처럼 부드럽게
-Shape of You,https://www.youtube.com/watch?v=JGwWNGJdvx8,Ed Sheeran,Pop,당신의 모양
-Blinding Lights,https://www.youtube.com/watch?v=4NRXx6U8ABQ,The Weeknd,Pop,눈부신 불빛
-Bad Guy,https://www.youtube.com/watch?v=DyDfgMOUjCI,Billie Eilish,Pop,나쁜 남자
+title,youtube_url,artist,genre,hint,start_time
+Dynamite,https://www.youtube.com/watch?v=gdZLi9oWNZg,BTS,K-Pop,다이너마이트,30
+Butter,https://www.youtube.com/watch?v=WMweEpGlu_U,BTS,K-Pop,버터처럼 부드럽게,10
+Shape of You,https://www.youtube.com/watch?v=JGwWNGJdvx8,Ed Sheeran,Pop,당신의 모양,15
+Blinding Lights,https://www.youtube.com/watch?v=4NRXx6U8ABQ,The Weeknd,Pop,눈부신 불빛,20
+Bad Guy,https://www.youtube.com/watch?v=DyDfgMOUjCI,Billie Eilish,Pop,나쁜 남자,0

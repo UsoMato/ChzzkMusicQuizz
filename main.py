@@ -28,6 +28,7 @@ class Song(BaseModel):
     artist: str
     genre: str
     hint: str
+    start_time: int = 0  # 재생 시작 지점 (초)
 
 
 class Player(BaseModel):
@@ -64,6 +65,12 @@ def load_songs():
         with open(csv_path, "r", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for idx, row in enumerate(reader):
+                # start_time을 정수로 변환, 없거나 잘못된 값이면 0
+                try:
+                    start_time = int(row.get("start_time", "0"))
+                except (ValueError, TypeError):
+                    start_time = 0
+                
                 song = Song(
                     id=idx,
                     title=row.get("title", ""),
@@ -71,6 +78,7 @@ def load_songs():
                     artist=row.get("artist", ""),
                     genre=row.get("genre", ""),
                     hint=row.get("hint", ""),
+                    start_time=start_time,
                 )
                 songs_data.append(song)
         print(f"Loaded {len(songs_data)} songs from CSV")
@@ -116,6 +124,7 @@ async def get_current_song():
         "genre": song.genre,
         "hint": song.hint if game_state.show_hint else None,
         "artist": song.artist,
+        "start_time": song.start_time,
     }
 
 
