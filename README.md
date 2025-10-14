@@ -174,27 +174,64 @@ nomat/
 
 - `GET /api/game/results` - 게임 결과 (점수순 정렬)
 
-## 🚀 치지직 채팅 연동 (TODO)
+## 🚀 치지직 채팅 연동
 
-현재 치지직 채팅 연동을 위한 기본 구조가 준비되어 있습니다.
+치지직 채팅으로 시청자들이 실시간으로 정답을 맞출 수 있습니다!
 
-### 구현이 필요한 부분
+### 설정 방법
 
-`frontend/src/pages/GamePage.tsx`의 106-121번 라인:
+1. **`.env` 파일 생성**
 
-```typescript
-// 치지직 채팅 이벤트 리스너 등록 (추후 구현)
-// chzzkChat.on('message', handleChatAnswer);
+   프로젝트 루트에 `.env` 파일을 생성하고 다음 정보를 입력합니다:
 
-// 치지직 채팅 이벤트 리스너 해제
-// chzzkChat.off('message', handleChatAnswer);
-```
+   ```bash
+   # 치지직 채널 ID (채널 URL의 마지막 부분)
+   # 예: https://chzzk.naver.com/live/abc123 -> abc123
+   CHZZK_CHANNEL_ID=your_channel_id_here
 
-### 구현 방법
+   # 네이버 인증 쿠키 값
+   CHZZK_NID_AUT=your_nid_aut_cookie_here
+   CHZZK_NID_SES=your_nid_ses_cookie_here
+   ```
 
-1. 치지직 채팅 API/SDK 연동
-2. 채팅 메시지 수신 이벤트 리스너 등록
-3. `handleChatAnswer` 함수를 통해 정답 체크
+2. **네이버 쿠키 값 확인 방법**
+
+   1. 웹브라우저에서 `chzzk.naver.com` 접속 후 로그인
+   2. 개발자 도구 열기 (F12)
+   3. `Application` (또는 `저장소`) 탭 선택
+   4. `Cookies` → `https://chzzk.naver.com` 선택
+   5. `NID_AUT`와 `NID_SES` 값을 복사하여 `.env` 파일에 입력
+
+3. **서버 실행**
+
+   ```powershell
+   python main.py
+   ```
+
+   서버 시작 시 다음 메시지가 출력됩니다:
+
+   ```
+   Starting Chzzk chat client for channel: {your_channel_id}
+   Chzzk chat client started in background thread
+   ```
+
+### 작동 방식
+
+- 게임이 진행 중일 때, 시청자들이 채팅으로 정답을 입력합니다
+- 백엔드가 자동으로 정답을 체크하고 점수를 기록합니다
+- 정답을 맞춘 시청자에게 축하 메시지가 자동으로 전송됩니다
+
+  ```
+  🎉 {닉네임}님 정답! ({노래 제목})
+  ```
+
+- 여러 정답 형식을 허용합니다 (예: "다이너마이트", "Dynamite", "다이나마이트" 모두 정답)
+
+### 주의사항
+
+- 채팅 봇 기능을 사용하려면 네이버 계정으로 로그인이 필요합니다
+- 쿠키 값은 주기적으로 변경될 수 있으므로, 연결이 끊기면 새로 확인해야 합니다
+- `.env` 파일은 절대 공개 저장소에 업로드하지 마세요 (`.gitignore`에 추가 권장)
 
 ## 🎨 커스터마이징
 

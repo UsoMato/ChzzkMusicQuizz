@@ -1,14 +1,39 @@
+import asyncio
 import csv
 import os
+from contextlib import asynccontextmanager
 from typing import List
 
 import uvicorn
+from chzzkpy.unofficial.chat import ChatClient, ChatMessage
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-app = FastAPI(title="노래 맞추기 게임")
+# 환경 변수 로드
+load_dotenv()
+
+# 채팅 클라이언트 전역 변수
+chat_client = None
+chat_task = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI 서버의 생명주기 관리"""
+    # 서버 시작 시
+    load_songs()
+    await start_chat_client()
+
+    yield
+
+    # 서버 종료 시
+    await stop_chat_client()
+
+
+app = FastAPI(title="노래 맞추기 게임", lifespan=lifespan)
 
 # CORS 설정
 app.add_middleware(
@@ -18,6 +43,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 치지직 채팅 클라이언트 (환경 변수에서 설정 읽기)
+CHZZK_CHANNEL_ID = os.getenv("CHZZK_CHANNEL_ID", "")
+CHZZK_NID_AUT = os.getenv("CHZZK_NID_AUT", "")
+CHZZK_NID_SES = os.getenv("CHZZK_NID_SES", "")
+
+chat_client = None
+chat_task = None
+
+if CHZZK_CHANNEL_ID and CHZZK_NID_AUT and CHZZK_NID_SES:
+    # ChatClient 초기화 (인증은 start 시점에 수행)
+    chat_client = ChatClient(CHZZK_CHANNEL_ID)
 
 
 # 데이터 모델
@@ -98,10 +135,103 @@ def load_songs():
         print(f"Error loading songs: {e}")
 
 
-@app.on_event("startup")
-async def startup_event():
-    """서버 시작 시 노래 데이터 로드"""
-    load_songs()
+def setup_chat_handlers():
+    """치지직 채팅 이벤트 핸들러 설정"""
+    if not chat_client:
+        return
+
+    @chat_client.event
+    async def on_chat(message: ChatMessage):
+        """채팅 메시지 수신 시 정답 체크"""
+        print(f"Received chat from {message.profile.nickname}: {message.content}")
+        # 게임이 진행 중이 아니면 무시
+        if not game_state.is_playing:
+            return
+
+        # 현재 노래가 없으면 무시
+        if game_state.current_song_index >= len(songs_data):
+            return
+
+        username = message.profile.nickname
+        answer = message.content.strip()
+
+        # 빈 메시지 무시
+        if not answer:
+            return
+
+        current_song = songs_data[game_state.current_song_index]
+
+        # 여러 정답 중 하나라도 일치하면 정답으로 인정
+        answer_lower = answer.lower()
+        is_correct = any(
+            answer_lower == title.strip().lower() for title in current_song.title
+        )
+
+        if is_correct:
+            # 플레이어 점수 업데이트
+            player_found = False
+            for player in game_state.players:
+                if player.username == username:
+                    player.score += 1
+                    player_found = True
+                    break
+
+            if not player_found:
+                game_state.players.append(Player(username=username, score=1))
+
+            # 정답자에게 축하 메시지 전송
+            await chat_client.send_chat(
+                f"🎉 {username}님 정답! ({', '.join(current_song.title)})"
+            )
+            print(f"✅ {username} 님이 정답을 맞혔습니다: {answer}")
+
+
+async def start_chat_client():
+    """치지직 채팅 클라이언트를 백그라운드에서 시작"""
+    global chat_client, chat_task
+
+    # 환경 변수에서 설정 읽기
+    CHZZK_CHANNEL_ID = os.getenv("CHZZK_CHANNEL_ID", "")
+    CHZZK_NID_AUT = os.getenv("CHZZK_NID_AUT", "")
+    CHZZK_NID_SES = os.getenv("CHZZK_NID_SES", "")
+
+    if not (CHZZK_CHANNEL_ID and CHZZK_NID_AUT and CHZZK_NID_SES):
+        print("Chzzk credentials not configured. Chat integration disabled.")
+        return
+
+    try:
+        print(f"Starting Chzzk chat client for channel: {CHZZK_CHANNEL_ID}")
+        chat_client = ChatClient(CHZZK_CHANNEL_ID)
+        setup_chat_handlers()
+
+        # start()를 백그라운드 태스크로 실행
+        import asyncio
+
+        chat_task = asyncio.create_task(chat_client.start(CHZZK_NID_AUT, CHZZK_NID_SES))
+        print("Chzzk chat client started successfully")
+    except Exception as e:
+        import traceback
+
+        print(f"Error starting chat client: {e}")
+        print(traceback.format_exc())
+
+
+async def stop_chat_client():
+    """치지직 채팅 클라이언트 종료"""
+    global chat_client, chat_task
+
+    if chat_task and not chat_task.done():
+        chat_task.cancel()
+        try:
+            await chat_task
+        except asyncio.CancelledError:
+            pass
+
+    if chat_client:
+        try:
+            await chat_client.close()
+        except Exception as e:
+            print(f"Error closing chat client: {e}")
 
 
 @app.get("/")
@@ -189,7 +319,7 @@ async def check_answer(username: str, answer: str):
         raise HTTPException(status_code=404, detail="No current song")
 
     current_song = songs_data[game_state.current_song_index]
-    
+
     # 여러 정답 중 하나라도 일치하면 정답으로 인정
     answer_lower = answer.strip().lower()
     is_correct = any(
