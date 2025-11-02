@@ -3,13 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import CircularProgress from '../components/CircularProgress';
 import YouTubePlayer, { YouTubePlayerHandle } from '../components/YouTubePlayer';
+import Leaderboard from '../components/Leaderboard';
 import './GamePage.css';
 
 interface Song {
   id: number;
   youtube_url: string;
   genre: string;
-  hint: string | null;
+  hint: string; // 항상 힌트를 포함
   artist: string;
   start_time: number; // 재생 시작 지점 (초)
 }
@@ -22,8 +23,7 @@ function GamePage() {
   const [progress, setProgress] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [volume, setVolume] = useState(100); // 볼륨 (0-100)
-  const [duration] = useState(30); // 30초 재생
-  const [hintDelay] = useState(15); // 15초 후 힌트 표시
+  const [actualDuration, setActualDuration] = useState(60); // 실제 재생 시간 (노래 길이와 비교)
   const timerRef = useRef<number | null>(null);
   const hintTimerRef = useRef<number | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayerHandle>(null);
@@ -60,14 +60,42 @@ function GamePage() {
     try {
       const response = await axios.get('/api/game/current-song');
       setSong(response.data);
-      startPlaying();
     } catch (error) {
       console.error('Failed to load song:', error);
       alert('노래를 불러오는데 실패했습니다.');
     }
   };
 
-  const startPlaying = () => {
+  // YouTube 플레이어가 준비되면 노래 길이를 가져와서 재생 시작
+  const onPlayerReady = () => {
+    if (!youtubePlayerRef.current) return;
+
+    const player = youtubePlayerRef.current.getPlayer();
+    if (!player || !player.getDuration) return;
+
+    setTimeout(() => {
+      try {
+        const videoDuration = player.getDuration();
+        const startTime = song?.start_time || 0;
+        const remainingDuration = videoDuration - startTime;
+
+        // 최대 60초, 노래가 60초보다 짧으면 노래 길이만큼 재생
+        const playDuration = Math.min(60, remainingDuration);
+        setActualDuration(playDuration);
+
+        console.log(`Video duration: ${videoDuration}s, Start: ${startTime}s, Playing for: ${playDuration}s`);
+
+        startPlaying(playDuration);
+      } catch (error) {
+        console.error('Failed to get video duration:', error);
+        // 기본값으로 60초 재생
+        setActualDuration(60);
+        startPlaying(60);
+      }
+    }, 500); // 플레이어가 완전히 준비될 때까지 대기
+  };
+
+  const startPlaying = (playDuration: number) => {
     setIsPlaying(true);
     setProgress(0);
     setShowHint(false);
@@ -84,19 +112,21 @@ function GamePage() {
           stopPlaying();
           return 100;
         }
-        return prev + (100 / duration);
+        return prev + (100 / playDuration);
       });
     }, 1000);
 
-    // 힌트 타이머
-    hintTimerRef.current = setTimeout(async () => {
+    // 힌트 타이머 - 끝나기 15초 전
+    const hintDelay = Math.max(0, playDuration - 15);
+    if (hintDelay > 0) {
+      hintTimerRef.current = setTimeout(() => {
+        console.log('Showing hint');
+        setShowHint(true);
+      }, hintDelay * 1000);
+    } else {
+      // 재생 시간이 15초 이하면 즉시 힌트 표시
       setShowHint(true);
-      try {
-        await axios.post('/api/game/show-hint');
-      } catch (error) {
-        console.error('Failed to show hint:', error);
-      }
-    }, hintDelay * 1000);
+    }
   };
 
   const stopPlaying = () => {
@@ -121,7 +151,7 @@ function GamePage() {
         if (song && youtubePlayerRef.current) {
           youtubePlayerRef.current.seekTo(song.start_time || 0);
         }
-        startPlaying();
+        onPlayerReady(); // 재생 시간 재계산 후 시작
       } else {
         // 일시정지 상태에서 재개할 때는 타이머만 다시 시작
         setIsPlaying(true);
@@ -131,7 +161,7 @@ function GamePage() {
               stopPlaying();
               return 100;
             }
-            return prev + (100 / duration);
+            return prev + (100 / actualDuration);
           });
         }, 1000);
       }
@@ -148,33 +178,30 @@ function GamePage() {
     navigate('/answer');
   };
 
-  // 치지직 채팅 연동 placeholder
-  // TODO: 실제 치지직 API 연동 구현
+  // 정답자 체크 - 주기적으로 정답자가 있는지 확인
   useEffect(() => {
-    // 치지직 채팅에서 정답이 들어오면 이 함수가 호출되어야 함
-    const handleChatAnswer = async (username: string, answer: string) => {
-      try {
-        const response = await axios.post('/api/game/check-answer', null, {
-          params: { username, answer }
-        });
+    if (!isPlaying) return;
 
-        if (response.data.is_correct) {
+    const checkWinner = async () => {
+      try {
+        const response = await axios.get('/api/game/winner');
+        if (response.data.winner) {
+          console.log('Winner detected:', response.data.winner);
           stopPlaying();
           navigate('/answer');
         }
       } catch (error) {
-        console.error('Failed to check answer:', error);
+        console.error('Failed to check winner:', error);
       }
     };
 
-    // 치지직 채팅 이벤트 리스너 등록 (추후 구현)
-    // chzzkChat.on('message', handleChatAnswer);
+    // 1초마다 정답자 확인
+    const winnerCheckInterval = setInterval(checkWinner, 1000);
 
     return () => {
-      // 치지직 채팅 이벤트 리스너 해제
-      // chzzkChat.off('message', handleChatAnswer);
+      clearInterval(winnerCheckInterval);
     };
-  }, [navigate]);
+  }, [isPlaying, navigate]);
 
   if (!song) {
     return (
@@ -186,6 +213,7 @@ function GamePage() {
 
   return (
     <div className="game-page">
+      <Leaderboard />
       <div className="game-content">
         <h2 className="game-title">노래를 맞춰보세요!</h2>
 
@@ -254,6 +282,7 @@ function GamePage() {
             volume={volume}
             startTime={song.start_time}
             onEnded={stopPlaying}
+            onReady={onPlayerReady}
           />
         </div>
       </div>

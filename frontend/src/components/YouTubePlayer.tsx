@@ -7,6 +7,7 @@ interface YouTubePlayerProps {
   volume?: number;
   startTime?: number; // 재생 시작 지점 (초)
   onEnded?: () => void;
+  onReady?: () => void; // 플레이어가 준비되었을 때 호출
 }
 
 export interface YouTubePlayerHandle {
@@ -16,7 +17,7 @@ export interface YouTubePlayerHandle {
 }
 
 const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  ({ url, playing = false, controls = false, volume = 100, startTime = 0, onEnded }, ref) => {
+  ({ url, playing = false, controls = false, volume = 100, startTime = 0, onEnded, onReady }, ref) => {
     const playerRef = useRef<HTMLIFrameElement>(null);
     const playerInstanceRef = useRef<any>(null);
     const playerIdRef = useRef(`youtube-player-${Math.random().toString(36).substr(2, 9)}`);
@@ -152,6 +153,10 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
               // 자동 재생이 필요한 경우
               if (playing && event.target && event.target.playVideo) {
                 event.target.playVideo();
+              }
+              // onReady 콜백 호출
+              if (onReady) {
+                onReady();
               }
             },
             onStateChange: (event: any) => {

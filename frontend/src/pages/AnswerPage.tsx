@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import YouTubePlayer from '../components/YouTubePlayer';
+import Leaderboard from '../components/Leaderboard';
 import './AnswerPage.css';
 
 interface Song {
@@ -11,6 +12,7 @@ interface Song {
   artist: string;
   genre: string;
   hint: string;
+  winner?: string;  // 정답자 닉네임
 }
 
 function AnswerPage() {
@@ -67,8 +69,18 @@ function AnswerPage() {
 
   return (
     <div className="answer-page">
+      <Leaderboard />
       <div className="answer-content">
         <h2 className="answer-title">🎉 정답입니다! 🎉</h2>
+
+        {song.winner && (
+          <div className="winner-info">
+            <p className="winner-text">
+              <span className="winner-label">정답자:</span>
+              <span className="winner-name">{song.winner}</span>
+            </p>
+          </div>
+        )}
 
         <div className="youtube-container">
           <YouTubePlayer

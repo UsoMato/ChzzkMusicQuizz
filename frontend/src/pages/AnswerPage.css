@@ -20,6 +20,37 @@
   animation: pulse 2s infinite;
 }
 
+.winner-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+  animation: slideDown 0.5s ease-out;
+}
+
+.winner-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.winner-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.3rem;
+}
+
+.winner-name {
+  color: #ffd700;
+  font-size: 1.8rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: glow 1.5s ease-in-out infinite;
+}
+
 .youtube-container {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 20px;
@@ -112,9 +143,50 @@
   }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+
+  0%,
+  100% {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5),
+      0 0 10px rgba(255, 215, 0, 0.5);
+  }
+
+  50% {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(255, 215, 0, 0.8),
+      0 0 30px rgba(255, 215, 0, 0.6);
+  }
+}
+
 @media (max-width: 768px) {
   .answer-title {
     font-size: 2rem;
+  }
+
+  .winner-text {
+    font-size: 1.2rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .winner-label {
+    font-size: 1.1rem;
+  }
+
+  .winner-name {
+    font-size: 1.5rem;
   }
 
   .song-title {

@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import os
+import random
 from contextlib import asynccontextmanager
 from typing import List
 
@@ -78,11 +79,20 @@ class GameState(BaseModel):
     players: List[Player]
     is_playing: bool
     show_hint: bool
+    current_winner: str = ""  # 현재 노래의 정답자 닉네임
+    song_order: List[int] = []  # 랜덤 순서로 재생할 노래 인덱스 리스트
+    played_count: int = 0  # 재생한 곡 수
 
 
 # 게임 상태 저장
 game_state = GameState(
-    current_song_index=0, players=[], is_playing=False, show_hint=False
+    current_song_index=0, 
+    players=[], 
+    is_playing=False, 
+    show_hint=False, 
+    current_winner="",
+    song_order=[],
+    played_count=0
 )
 
 songs_data: List[Song] = []
@@ -161,10 +171,15 @@ def setup_chat_handlers():
 
         current_song = songs_data[game_state.current_song_index]
 
-        # 여러 정답 중 하나라도 일치하면 정답으로 인정
-        answer_lower = answer.lower()
+        # 이미 정답자가 있으면 무시 (최초 정답자만 점수 획득)
+        if game_state.current_winner:
+            return
+
+        # 여러 정답 중 하나라도 일치하면 정답으로 인정 (띄어쓰기 무시)
+        answer_normalized = answer.lower().replace(" ", "")
         is_correct = any(
-            answer_lower == title.strip().lower() for title in current_song.title
+            answer_normalized == title.strip().lower().replace(" ", "")
+            for title in current_song.title
         )
 
         if is_correct:
@@ -179,10 +194,8 @@ def setup_chat_handlers():
             if not player_found:
                 game_state.players.append(Player(username=username, score=1))
 
-            # 정답자에게 축하 메시지 전송
-            await chat_client.send_chat(
-                f"🎉 {username}님 정답! ({', '.join(current_song.title)})"
-            )
+            # 현재 노래의 정답자 저장
+            game_state.current_winner = username
             print(f"✅ {username} 님이 정답을 맞혔습니다: {answer}")
 
 
@@ -264,7 +277,7 @@ async def get_current_song():
         "id": song.id,
         "youtube_url": song.youtube_url,
         "genre": song.genre,
-        "hint": song.hint if game_state.show_hint else None,
+        "hint": song.hint,  # 힌트를 항상 포함 (프론트엔드에서 표시 시점 결정)
         "artist": song.artist,
         "start_time": song.start_time,
     }
@@ -276,29 +289,54 @@ async def get_current_song_answer():
     if game_state.current_song_index >= len(songs_data):
         raise HTTPException(status_code=404, detail="No more songs")
 
-    return songs_data[game_state.current_song_index]
+    song_data = songs_data[game_state.current_song_index]
+    return {
+        **song_data.dict(),
+        "winner": game_state.current_winner  # 정답자 닉네임 포함
+    }
+
+
+@app.get("/api/game/winner")
+async def get_current_winner():
+    """현재 노래의 정답자 닉네임 반환"""
+    return {"winner": game_state.current_winner}
 
 
 @app.post("/api/game/start")
 async def start_game():
     """게임 시작"""
-    game_state.current_song_index = 0
+    # 랜덤 순서 생성 (중복 없이)
+    song_indices = list(range(len(songs_data)))
+    random.shuffle(song_indices)
+    
+    game_state.song_order = song_indices
+    game_state.played_count = 0
+    game_state.current_song_index = song_indices[0] if song_indices else 0
     game_state.players = []
     game_state.is_playing = True
     game_state.show_hint = False
+    game_state.current_winner = ""  # 정답자 초기화
+    
+    print(f"Game started with random order: {song_indices[:5]}...")  # 처음 5개만 로그
     return {"message": "Game started", "state": game_state}
 
 
 @app.post("/api/game/next")
 async def next_song():
-    """다음 곡으로 이동"""
-    game_state.current_song_index += 1
+    """다음 곡으로 이동 (랜덤 순서)"""
+    game_state.played_count += 1
     game_state.show_hint = False
+    game_state.current_winner = ""  # 정답자 초기화
 
-    if game_state.current_song_index >= len(songs_data):
+    # 모든 곡을 재생했는지 확인
+    if game_state.played_count >= len(game_state.song_order):
         game_state.is_playing = False
         return {"message": "Game finished", "state": game_state}
 
+    # 다음 곡 인덱스 가져오기
+    game_state.current_song_index = game_state.song_order[game_state.played_count]
+    print(f"Next song: index {game_state.current_song_index} ({game_state.played_count + 1}/{len(game_state.song_order)})")
+    
     return {"message": "Next song", "state": game_state}
 
 
@@ -318,12 +356,17 @@ async def check_answer(username: str, answer: str):
     if game_state.current_song_index >= len(songs_data):
         raise HTTPException(status_code=404, detail="No current song")
 
+    # 이미 정답자가 있으면 정답이어도 점수 부여하지 않음
+    if game_state.current_winner:
+        return {"is_correct": False, "username": username, "answer": answer, "message": "이미 정답자가 있습니다"}
+
     current_song = songs_data[game_state.current_song_index]
 
-    # 여러 정답 중 하나라도 일치하면 정답으로 인정
-    answer_lower = answer.strip().lower()
+    # 여러 정답 중 하나라도 일치하면 정답으로 인정 (띄어쓰기 무시)
+    answer_normalized = answer.strip().lower().replace(" ", "")
     is_correct = any(
-        answer_lower == title.strip().lower() for title in current_song.title
+        answer_normalized == title.strip().lower().replace(" ", "")
+        for title in current_song.title
     )
 
     if is_correct:
@@ -338,6 +381,9 @@ async def check_answer(username: str, answer: str):
         if not player_found:
             game_state.players.append(Player(username=username, score=1))
 
+        # 현재 노래의 정답자 저장
+        game_state.current_winner = username
+
     return {"is_correct": is_correct, "username": username, "answer": answer}
 
 
@@ -351,7 +397,14 @@ async def get_results():
 @app.get("/api/game/state")
 async def get_game_state():
     """현재 게임 상태 반환"""
-    return game_state
+    total_songs = len(game_state.song_order) if game_state.song_order else len(songs_data)
+    current_progress = game_state.played_count + 1 if game_state.is_playing else game_state.played_count
+    
+    return {
+        **game_state.dict(),
+        "total_songs": total_songs,
+        "current_progress": current_progress,
+    }
 
 
 # 프론트엔드 정적 파일 서빙 (빌드 후)
