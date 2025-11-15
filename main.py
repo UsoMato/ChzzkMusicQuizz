@@ -100,6 +100,51 @@ game_state = GameState(
 songs_data: List[Song] = []
 
 
+def unescape_string(s: str) -> str:
+    """이스케이프 시퀀스를 실제 문자로 변환"""
+    result = []
+    i = 0
+    while i < len(s):
+        if s[i] == '\\' and i + 1 < len(s):
+            # 백슬래시 다음 문자를 그대로 추가
+            result.append(s[i + 1])
+            i += 2
+        else:
+            result.append(s[i])
+            i += 1
+    return ''.join(result)
+
+
+def parse_escaped_list(content: str) -> List[str]:
+    """이스케이프 문자를 고려하여 쉼표로 구분된 리스트 파싱"""
+    items = []
+    current_item = []
+    i = 0
+    
+    while i < len(content):
+        if content[i] == '\\' and i + 1 < len(content):
+            # 이스케이프된 문자를 그대로 추가
+            current_item.append(content[i + 1])
+            i += 2
+        elif content[i] == ',':
+            # 이스케이프되지 않은 쉼표: 아이템 구분자
+            item = ''.join(current_item).strip()
+            if item:
+                items.append(item)
+            current_item = []
+            i += 1
+        else:
+            current_item.append(content[i])
+            i += 1
+    
+    # 마지막 아이템 추가
+    item = ''.join(current_item).strip()
+    if item:
+        items.append(item)
+    
+    return items
+
+
 def load_songs():
     """CSV 파일에서 노래 데이터 로드"""
     global songs_data
@@ -122,15 +167,14 @@ def load_songs():
 
                 # title을 배열로 파싱
                 # 형식: "[다이너마이트, Dynamite]" 또는 "다이너마이트"
+                # 이스케이프 문자 처리: \, \[ \] \" 등을 문자로 인식
                 title_str = row.get("title", "")
                 if title_str.startswith("[") and title_str.endswith("]"):
-                    # 대괄호 제거하고 쉼표로 분리
-                    title_list = [
-                        t.strip() for t in title_str[1:-1].split(",") if t.strip()
-                    ]
+                    # 대괄호 제거하고 쉼표로 분리 (이스케이프된 쉼표는 분리하지 않음)
+                    title_list = parse_escaped_list(title_str[1:-1])
                 else:
-                    # 단일 타이틀
-                    title_list = [title_str.strip()] if title_str.strip() else []
+                    # 단일 타이틀 (이스케이프 문자 해제)
+                    title_list = [unescape_string(title_str.strip())] if title_str.strip() else []
 
                 song = Song(
                     id=idx,
