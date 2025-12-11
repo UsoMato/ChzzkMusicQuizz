@@ -72,13 +72,13 @@ function AnswerPage() {
     <div className="answer-page">
       <Leaderboard />
       <div className="answer-content">
-        {skipped ? (
+        {skipped && !song.winner ? (
           <h2 className="answer-title">😢 안타깝네요! 😢</h2>
         ) : (
           <h2 className="answer-title">🎉 정답입니다! 🎉</h2>
         )}
 
-        {!skipped && song.winner && (
+        {song.winner && (
           <div className="winner-info">
             <p className="winner-text">
               <span className="winner-label">정답자:</span>
