@@ -30,6 +30,7 @@ function GamePage() {
   const hintTimerRef = useRef<number | null>(null);
   const genreTimerRef = useRef<number | null>(null);
   const artistTimerRef = useRef<number | null>(null);
+  const firstWinnerDetectedTimeRef = useRef<number | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayerHandle>(null);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ function GamePage() {
       clearTimeout(artistTimerRef.current);
       artistTimerRef.current = null;
     }
+    firstWinnerDetectedTimeRef.current = null;
 
     loadCurrentSong();
 
@@ -68,6 +70,7 @@ function GamePage() {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (genreTimerRef.current) clearTimeout(genreTimerRef.current);
       if (artistTimerRef.current) clearTimeout(artistTimerRef.current);
+      firstWinnerDetectedTimeRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
@@ -225,11 +228,32 @@ function GamePage() {
     const checkWinner = async () => {
       try {
         const response = await axios.get('/api/game/winner');
-        // 정답자가 3명 이상일 때만 정답 페이지로 이동
-        if (response.data.winner_count >= 3) {
+        const winnerCount = response.data.winner_count;
+
+        // 정답자가 3명 이상이면 즉시 이동
+        if (winnerCount >= 3) {
           console.log('3 Winners detected:', response.data.winner);
           stopPlaying();
           navigate('/answer');
+          return;
+        }
+
+        // 정답자가 1명 이상이면 타이머 체크
+        if (winnerCount >= 1) {
+          if (firstWinnerDetectedTimeRef.current === null) {
+            firstWinnerDetectedTimeRef.current = Date.now();
+            console.log('First winner detected, starting 3s timer');
+          } else {
+            const elapsed = Date.now() - firstWinnerDetectedTimeRef.current;
+            if (elapsed >= 3000) {
+              console.log('3 seconds passed since first winner');
+              stopPlaying();
+              navigate('/answer');
+            }
+          }
+        } else {
+          // 정답자가 없으면 타이머 리셋
+          firstWinnerDetectedTimeRef.current = null;
         }
       } catch (error) {
         console.error('Failed to check winner:', error);
