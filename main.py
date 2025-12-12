@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 import uvicorn
+import aiohttp
 from chzzkpy.unofficial.chat import ChatClient, ChatMessage
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -559,6 +560,44 @@ async def get_all_participants():
         "total_count": len(sorted_players),
         "players": [player.dict() for player in sorted_players]
     }
+
+
+@app.get("/redirect")
+async def chzzk_callback(code: str, state: str):
+    """치지직 인증 콜백 및 토큰 발급"""
+    client_id = os.getenv("CHZZK_CLIENT_ID")
+    client_secret = os.getenv("CHZZK_CLIENT_SECRET")
+    
+    if not client_id or not client_secret:
+        raise HTTPException(status_code=500, detail="Server configuration error: Missing Client ID or Secret")
+
+    # 치지직 게임 연동 토큰 발급 URL (예시)
+    # 실제 URL은 치지직 개발자 문서를 확인해야 합니다.
+    # 보통 https://comm-api.game.naver.com/nng_main/v1/oauth/token 등을 사용합니다.
+    token_url = "https://comm-api.game.naver.com/nng_main/v1/oauth/token"
+    
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.post(token_url, json={
+                "grant_type": "authorization_code",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "code": code,
+                "state": state
+            }) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise HTTPException(status_code=response.status, detail=f"Failed to get access token: {error_text}")
+                
+                data = await response.json()
+                # data 구조: {"code": 200, "message": "Success", "content": {"accessToken": "...", "refreshToken": "...", ...}}
+                
+                return {
+                    "message": "Authentication successful",
+                    "token_data": data
+                }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Token exchange failed: {str(e)}")
 
 
 # 프론트엔드 정적 파일 서빙 (빌드 후)
