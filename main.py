@@ -11,6 +11,7 @@ import aiohttp
 from chzzkpy.unofficial.chat import ChatClient, ChatMessage
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -592,10 +593,8 @@ async def chzzk_callback(code: str, state: str):
                 data = await response.json()
                 # data 구조: {"code": 200, "message": "Success", "content": {"accessToken": "...", "refreshToken": "...", ...}}
                 
-                return {
-                    "message": "Authentication successful",
-                    "token_data": data
-                }
+                print(f"Chzzk Auth Success: {data}")
+                return RedirectResponse(url="/")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Token exchange failed: {str(e)}")
 
