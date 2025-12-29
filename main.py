@@ -138,9 +138,9 @@ def handle_game_answer(username: str, answer: str):
         points = 0
         rank = len(game_state.current_winners)
         if rank == 0:
-            points = 5
+            points = 1
         elif rank == 1:
-            points = 3
+            points = 1
         elif rank == 2:
             points = 1
 
@@ -464,9 +464,9 @@ def setup_chat_handlers():
             points = 0
             rank = len(game_state.current_winners)
             if rank == 0:
-                points = 5
+                points = 1
             elif rank == 1:
-                points = 3
+                points = 1
             elif rank == 2:
                 points = 1
 
@@ -678,9 +678,9 @@ async def check_answer(username: str, answer: str):
         points = 0
         rank = len(game_state.current_winners)
         if rank == 0:
-            points = 5
+            points = 1
         elif rank == 1:
-            points = 3
+            points = 1
         elif rank == 2:
             points = 1
 
