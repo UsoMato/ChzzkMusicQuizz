@@ -48,6 +48,7 @@ frontend/lerna-debug.log*
 .env.local
 .env.development.local
 .env.test.local
+built_secrets.py
 .env.production.local
 
 # Frontend - Environment variables

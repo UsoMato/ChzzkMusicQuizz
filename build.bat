@@ -26,6 +26,11 @@ echo.
 echo [2/3] Python 패키지 설치 중...
 pip install pyinstaller requests
 
+REM 2.5 시크릿 주입 (빌드용 secrets.py 생성)
+echo.
+echo [2.5/3] 시크릿 주입 중...
+python build_secrets.py
+
 REM 3. PyInstaller로 exe 생성
 echo.
 echo [3/3] exe 파일 생성 중...
@@ -41,7 +46,6 @@ if exist "dist\NoMatGame\NoMatGame.exe" (
     echo 배포 시 다음 파일/폴더를 함께 배포하세요:
     echo   - dist\NoMatGame\ 폴더 전체
     echo   - songs.csv 파일 (NoMatGame.exe와 같은 폴더에 복사)
-    echo   - .env 파일 (선택, 치지직 연동 시 필요)
 ) else (
     echo 오류: exe 파일 생성 실패!
 )
