@@ -10,7 +10,6 @@ from typing import List
 import aiohttp
 import socketio
 import uvicorn
-from chzzkpy.unofficial.chat import ChatClient, ChatMessage
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -269,6 +268,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # 데이터 모델
 class Song(BaseModel):
     id: int
@@ -313,6 +313,7 @@ game_state = GameState(
 )
 
 songs_data: List[Song] = []
+
 
 def unescape_string(s: str) -> str:
     """이스케이프 시퀀스를 실제 문자로 변환"""
@@ -409,6 +410,7 @@ def load_songs(csv_filename: str = "songs.csv"):
     except Exception as e:
         print(f"Error loading songs: {e}")
         return 0
+
 
 @app.get("/api/health")
 async def health_check():
