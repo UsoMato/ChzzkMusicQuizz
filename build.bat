@@ -34,7 +34,7 @@ python build_secrets.py
 REM 3. PyInstaller로 exe 생성
 echo.
 echo [3/3] exe 파일 생성 중...
-pyinstaller nomat.spec --clean
+uv run pyinstaller nomat.spec --clean
 
 if exist "dist\NoMatGame\NoMatGame.exe" (
     echo.
