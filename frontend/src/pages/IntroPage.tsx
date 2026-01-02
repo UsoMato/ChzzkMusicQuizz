@@ -73,6 +73,9 @@ function IntroPage() {
       <div className="intro-content">
         <h1 className="intro-title">🎵 노래 맞추기 🎵</h1>
         <p className="intro-subtitle">치지직 스트리머와 함께하는 음악 퀴즈</p>
+        <p style={{ marginBottom: '20px', fontSize: '1.1rem' }}>
+          치지직 스트리머 <a href="https://chzzk.naver.com/577506b2d214450f65587fb04adc243a" target="_blank" rel="noopener noreferrer" style={{ color: '#00ffa3', textDecoration: 'none', fontWeight: 'bold' }}>우소 마토</a> 제작
+        </p>
         <div className="button-container">
           {isConnected ? (
             <button className="start-button" onClick={handleStart}>

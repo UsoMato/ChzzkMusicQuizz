@@ -61,6 +61,10 @@ function ResultPage() {
         <button className="restart-button" onClick={handleRestart}>
           처음으로 돌아가기
         </button>
+
+        <div className="footer-info" style={{ marginTop: '20px', fontSize: '0.8rem', textAlign: 'center', opacity: 0.7 }}>
+          치지직 스트리머 <a href="https://chzzk.naver.com/577506b2d214450f65587fb04adc243a" target="_blank" rel="noopener noreferrer" style={{ color: '#00ffa3', textDecoration: 'none' }}>우소 마토</a> 제작
+        </div>
       </div>
     </div>
   );
