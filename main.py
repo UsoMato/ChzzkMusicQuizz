@@ -711,6 +711,7 @@ async def connect_to_chzzk_socket(access_token: str):
 @app.get("/redirect")
 async def chzzk_callback(code: str, state: str, background_tasks: BackgroundTasks):
     """치지직 인증 콜백 및 토큰 발급"""
+    global current_access_token
     client_id = os.getenv("CHZZK_CLIENT_ID")
     client_secret = os.getenv("CHZZK_CLIENT_SECRET")
 
@@ -749,6 +750,7 @@ async def chzzk_callback(code: str, state: str, background_tasks: BackgroundTask
                 # 엑세스 토큰으로 세션 URL 요청 (백그라운드 작업으로 실행)
                 access_token = data.get("content", {}).get("accessToken")
                 if access_token:
+                    current_access_token = access_token
                     background_tasks.add_task(connect_to_chzzk_socket, access_token)
 
                 return RedirectResponse(url="/")
@@ -756,6 +758,12 @@ async def chzzk_callback(code: str, state: str, background_tasks: BackgroundTask
             raise HTTPException(
                 status_code=500, detail=f"Token exchange failed: {str(e)}"
             )
+
+
+@app.get("/api/chzzk/status")
+async def get_chzzk_status():
+    """치지직 연동 상태 반환"""
+    return {"connected": sio.connected, "has_token": current_access_token is not None}
 
 
 # 프론트엔드 정적 파일 서빙 (빌드 후)
