@@ -7,6 +7,10 @@ echo ========================================
 echo 노래 맞추기 게임 빌드 시작
 echo ========================================
 
+REM 기존 빌드 결과물 삭제
+if exist dist rd /s /q dist
+if exist build rd /s /q build
+
 REM 1. 프론트엔드 빌드
 echo.
 echo [1/3] 프론트엔드 빌드 중...
@@ -37,18 +41,22 @@ echo.
 echo [3/3] exe 파일 생성 중...
 uv run pyinstaller --noconfirm nomat.spec --clean
 
-if exist "dist\NoMatGame\NoMatGame.exe" (
-    echo.
-    echo ========================================
-    echo 빌드 완료!
-    echo 결과물: dist\NoMatGame\NoMatGame.exe
-    echo ========================================
-    echo.
-    echo 배포 시 다음 파일/폴더를 함께 배포하세요:
-    echo   - dist\NoMatGame\ 폴더 전체
-    echo   - songs.csv 파일 (NoMatGame.exe와 같은 폴더에 복사)
-) else (
-    echo 오류: exe 파일 생성 실패!
-)
+if not exist "dist\NoMatGame\NoMatGame.exe" goto FAILURE
 
+echo.
+echo ========================================
+echo 빌드 완료!
+echo 결과물: dist\NoMatGame\NoMatGame.exe
+echo ========================================
+echo.
+echo 배포 시 다음 파일/폴더를 함께 배포하세요:
+echo   - dist\NoMatGame\ 폴더 전체
+echo   - songs.csv 파일 (NoMatGame.exe와 같은 폴더에 복사)
+goto END
+
+:FAILURE
+echo.
+echo 오류: exe 파일 생성 실패!
+
+:END
 pause
