@@ -1,263 +1,117 @@
 # 노래 맞추기 게임 (NOMAT)
 
-치지직 스트리머와 함께하는 인터랙티브 노래 맞추기 웹 애플리케이션입니다.
+치지직(Chzzk) 스트리머와 시청자가 함께 즐길 수 있는 인터랙티브 노래 맞추기 게임입니다.
+YouTube 영상을 기반으로 노래 퀴즈를 진행하며, 채팅을 통해 정답을 맞출 수 있습니다.
 
 ## 📋 주요 기능
 
-### 페이지 구성
+### 🎮 게임 플레이
 
-- **인트로 페이지**: 게임 제목과 시작 버튼
-- **맞추기 페이지**: 노래 재생 및 정답 입력 대기
-  - 원형 진행바로 재생 상태 표시
-  - 클릭으로 재생/일시정지 제어
-  - 장르 표시
-  - 일정 시간 후 힌트 표시
-  - 치지직 채팅 연동 준비 (구현 예정)
-- **정답 페이지**: 정답 표시 및 YouTube 영상 재생
-  - 노래 제목, 아티스트, 장르 정보
-  - 다음 곡으로 이동 버튼
-- **결과 페이지**: 참가자 순위 표시
-  - 점수 순으로 정렬된 랭킹
+- **인트로**: 게임 시작 대기 화면
+- **문제 출제**:
+  - YouTube 영상의 오디오만 재생 (화면 숨김)
+  - 원형 타이머로 남은 시간 표시
+  - 장르 및 힌트 제공
+- **정답 공개**:
+  - 정답 시 해당 뮤직비디오/영상 재생
+  - 노래 제목, 아티스트 정보 표시
+- **결과 발표**: 게임 종료 후 참여자들의 점수 랭킹 표시
 
-### 특징
+## 📦 설치 및 실행 방법
 
-- YouTube 영상 재생 (맞추기 페이지에서는 숨김 처리)
-- CSV 파일 기반 노래 데이터 관리
-- RESTful API 구조
-- 반응형 디자인
+### 일반 사용자 (실행 파일 사용)
 
-## 🛠 기술 스택
+1. **실행**: `NoMatGame.exe`를 실행합니다.
+2. **설정**: 런처 화면에서 사용할 `songs.csv` 파일을 선택합니다.
+3. **게임 시작**:
+   - '서버 시작' 버튼을 누르면 백그라운드에서 게임 서버가 실행됩니다.
+   - '브라우저 열기' 버튼으로 게임 화면(크롬 등)을 띄웁니다.
+   - 브라우저에서 치지직에 로그인을 하면 채팅이 연동됩니다.
+   - 방송 송출 프로그램(OBS 등)에 해당 브라우저 화면을 캡처하여 방송합니다.
 
-### 백엔드
+### 노래 데이터 준비 (`songs.csv`)
 
-- Python 3.13+
-- FastAPI
-- Uvicorn
-- Pydantic
-
-### 프론트엔드
-
-- React 18
-- TypeScript
-- Vite
-- React Router
-- Axios
-- YouTube IFrame API
-
-## 📦 설치 및 실행
-
-### 1. Python 패키지 설치
-
-```powershell
-# Python 의존성 설치
-pip install -e .
-```
-
-### 2. 프론트엔드 설치
-
-```powershell
-# frontend 디렉토리로 이동
-cd frontend
-
-# npm 패키지 설치
-npm install
-```
-
-### 3. 노래 데이터 준비
-
-`songs.csv` 파일에 노래 정보를 입력합니다:
+`songs.csv` 파일은 다음 형식을 따릅니다:
 
 ```csv
-title,youtube_url,artist,genre,hint,start_time
-"[다이너마이트, Dynamite, 다이나마이트]",https://www.youtube.com/watch?v=gdZLi9oWNZg,BTS,K-Pop,다이너마이트,0
-"[Butter, 버터]",https://www.youtube.com/watch?v=WMweEpGlu_U,BTS,K-Pop,버터처럼 부드럽게,10
+title,artist,youtube_url,genre,hint,start_time
 ```
 
-**CSV 열 설명:**
+- **title**: 노래 제목 (정답)
+- **artist**: 가수 이름
+- **youtube_url**: YouTube 영상 링크
+- **genre**: 장르 (예: 발라드, 댄스)
+- **hint**: 힌트 텍스트
+- **start_time**: 재생 시작 시간 (초 단위, 예: 60)
 
-- `title`: 노래 제목 (정답, 여러 정답 허용)
-  - 단일 정답: `Dynamite`
-  - 여러 정답: `"[다이너마이트, Dynamite, 다이나마이트]"` (대괄호로 묶고 쉼표로 구분)
-  - 배열 형식을 사용하면 어느 하나를 입력해도 정답으로 인정
-- `youtube_url`: YouTube 영상 URL
-- `artist`: 아티스트명
-- `genre`: 장르
-- `hint`: 힌트 메시지
-- `start_time`: 재생 시작 지점 (초 단위, 0이면 처음부터)
+가수, 장르, 힌트 를 명시하지 않고 빈 칸으로 둘 수 있습니다.
 
-### 4. 개발 서버 실행
+예시:
 
-#### 백엔드 서버
-
-```powershell
-# 프로젝트 루트에서
-python main.py
+```csv
+title,artist,youtube_url,genre,hint,start_time
+Dynamite,BTS,https://www.youtube.com/watch?v=gdZLi9oC1ZQ,댄스,2020년 발매,30
+Shape of You,Ed Sheeran,https://www.youtube.com/watch?v=JGwWNGJdvx8,팝,2017년 히트곡,45
 ```
 
-백엔드 서버: <http://localhost:8000>
+#### YouTube 플레이리스트 가져오기
 
-#### 프론트엔드 서버
+`playlist_parser.py` 도구를 사용하여 YouTube 플레이리스트를 CSV로 변환할 수 있습니다.
 
-```powershell
-# frontend 디렉토리에서
-cd frontend
-npm run dev
+```bash
+python playlist_parser.py [플레이리스트URL]
 ```
 
-프론트엔드 서버: <http://localhost:3000>
+*(참고: `yt-dlp` 라이브러리가 필요합니다)*
 
-### 5. 프로덕션 빌드
+## 💻 개발자 가이드
 
-```powershell
-# frontend 디렉토리에서
-cd frontend
-npm run build
+### 요구 사항
 
-# 빌드된 파일은 frontend/dist에 생성됩니다
-# 백엔드 서버가 자동으로 정적 파일을 서빙합니다
-```
+- Python 3.13+
+- uv
+- Node.js 18+
 
-## 📁 프로젝트 구조
+### 프로젝트 구조
 
 ```
 nomat/
-├── main.py                 # FastAPI 백엔드 서버
-├── pyproject.toml          # Python 프로젝트 설정
-├── songs.csv               # 노래 데이터
-├── README.md
-└── frontend/
-    ├── package.json
-    ├── tsconfig.json
-    ├── vite.config.ts
-    ├── index.html
-    └── src/
-        ├── main.tsx
-        ├── App.tsx
-        ├── App.css
-        ├── index.css
-        ├── components/
-        │   ├── CircularProgress.tsx
-        │   ├── CircularProgress.css
-        │   └── YouTubePlayer.tsx
-        └── pages/
-            ├── IntroPage.tsx
-            ├── IntroPage.css
-            ├── GamePage.tsx
-            ├── GamePage.css
-            ├── AnswerPage.tsx
-            ├── AnswerPage.css
-            ├── ResultPage.tsx
-            └── ResultPage.css
+├── frontend/          # React + Vite 프론트엔드
+├── build/             # PyInstaller 빌드 아티팩트
+├── dist/              # 빌드 결과물 (EXE)
+├── main.py            # FastAPI 백엔드 서버
+├── launcher.py        # Tkinter GUI 런처
+├── playlist_parser.py # 유튜브 플레이리스트 파서
+├── build.bat          # 통합 빌드 스크립트
+└── nomat.spec         # PyInstaller 설정 파일
 ```
 
-## 🔌 API 엔드포인트
+### 개발 환경 실행
 
-### 게임 관리
-
-- `POST /api/game/start` - 게임 시작
-- `POST /api/game/next` - 다음 곡으로 이동
-- `POST /api/game/show-hint` - 힌트 표시
-- `GET /api/game/state` - 게임 상태 조회
-
-### 노래 정보
-
-- `GET /api/songs` - 전체 노래 목록
-- `GET /api/songs/{song_id}` - 특정 노래 정보
-- `GET /api/game/current-song` - 현재 노래 정보 (정답 제외)
-- `GET /api/game/current-song/answer` - 현재 노래 정답 정보
-
-### 정답 체크
-
-- `POST /api/game/check-answer?username={username}&answer={answer}` - 정답 확인
-
-### 결과
-
-- `GET /api/game/results` - 게임 결과 (점수순 정렬)
-
-## 🚀 치지직 채팅 연동
-
-치지직 채팅으로 시청자들이 실시간으로 정답을 맞출 수 있습니다!
-
-### 설정 방법
-
-1. **`.env` 파일 생성**
-
-   프로젝트 루트에 `.env` 파일을 생성하고 다음 정보를 입력합니다:
+1. **백엔드 실행**
 
    ```bash
-   # 치지직 채널 ID (채널 URL의 마지막 부분)
-   # 예: https://chzzk.naver.com/live/abc123 -> abc123
-   CHZZK_CHANNEL_ID=your_channel_id_here
-
-   # 네이버 인증 쿠키 값
-   CHZZK_NID_AUT=your_nid_aut_cookie_here
-   CHZZK_NID_SES=your_nid_ses_cookie_here
+   # 가상환경 생성 및 패키지 설치
+   uv sync
+   
+   # 서버 실행
+   uv run main.py
    ```
 
-2. **네이버 쿠키 값 확인 방법**
+2. **프론트엔드 실행**
 
-   1. 웹브라우저에서 `chzzk.naver.com` 접속 후 로그인
-   2. 개발자 도구 열기 (F12)
-   3. `Application` (또는 `저장소`) 탭 선택
-   4. `Cookies` → `https://chzzk.naver.com` 선택
-   5. `NID_AUT`와 `NID_SES` 값을 복사하여 `.env` 파일에 입력
-
-3. **서버 실행**
-
-   ```powershell
-   python main.py
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
    ```
 
-   서버 시작 시 다음 메시지가 출력됩니다:
+### 빌드 (Build)
 
-   ```
-   Starting Chzzk chat client for channel: {your_channel_id}
-   Chzzk chat client started in background thread
-   ```
+`build.bat` 스크립트를 실행하면 프론트엔드 빌드와 백엔드 패키징이 자동으로 수행됩니다.
 
-### 작동 방식
-
-- 게임이 진행 중일 때, 시청자들이 채팅으로 정답을 입력합니다
-- 백엔드가 자동으로 정답을 체크하고 점수를 기록합니다
-- 정답을 맞춘 시청자에게 축하 메시지가 자동으로 전송됩니다
-
-  ```
-  🎉 {닉네임}님 정답! ({노래 제목})
-  ```
-
-- 여러 정답 형식을 허용합니다 (예: "다이너마이트", "Dynamite", "다이나마이트" 모두 정답)
-
-### 주의사항
-
-- 채팅 봇 기능을 사용하려면 네이버 계정으로 로그인이 필요합니다
-- 쿠키 값은 주기적으로 변경될 수 있으므로, 연결이 끊기면 새로 확인해야 합니다
-- `.env` 파일은 절대 공개 저장소에 업로드하지 마세요 (`.gitignore`에 추가 권장)
-
-## 🎨 커스터마이징
-
-### 타이머 설정
-
-`frontend/src/pages/GamePage.tsx`:
-
-```typescript
-const [duration] = useState(30);    // 노래 재생 시간 (초)
-const [hintDelay] = useState(15);   // 힌트 표시 시간 (초)
+```cmd
+.\build.bat
 ```
 
-### 스타일 변경
-
-각 페이지의 CSS 파일을 수정하여 스타일을 변경할 수 있습니다:
-
-- `IntroPage.css`
-- `GamePage.css`
-- `AnswerPage.css`
-- `ResultPage.css`
-- `CircularProgress.css`
-
-## 📝 라이선스
-
-MIT License
-
-## 🤝 기여
-
-이슈와 Pull Request를 환영합니다!
+빌드가 완료되면 `dist/NoMatGame/NoMatGame.exe` 파일이 생성됩니다.
