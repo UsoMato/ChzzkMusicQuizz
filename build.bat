@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM 노래 맞추기 게임 빌드 스크립트
 REM Windows PowerShell 또는 CMD에서 실행
 
@@ -34,7 +35,7 @@ python build_secrets.py
 REM 3. PyInstaller로 exe 생성
 echo.
 echo [3/3] exe 파일 생성 중...
-uv run pyinstaller nomat.spec --clean
+uv run pyinstaller --noconfirm nomat.spec --clean
 
 if exist "dist\NoMatGame\NoMatGame.exe" (
     echo.
