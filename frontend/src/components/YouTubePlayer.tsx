@@ -77,6 +77,13 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
       if (playerInstanceRef.current && isPlayerReadyRef.current) {
         try {
           if (playing) {
+            // 재생 시작 전 볼륨 재설정 및 음소거 해제 (볼륨 스파이크 방지)
+            if (playerInstanceRef.current.setVolume) {
+              playerInstanceRef.current.setVolume(volume);
+            }
+            if (playerInstanceRef.current.unMute) {
+              playerInstanceRef.current.unMute();
+            }
             playerInstanceRef.current.playVideo();
           } else {
             playerInstanceRef.current.pauseVideo();
@@ -85,7 +92,8 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
           console.error('Error controlling playback:', error);
         }
       }
-    }, [playing]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [playing]); // volume은 의존성에서 제외하여 볼륨 조절 시 재생이 재시작되지 않도록 함
 
     useEffect(() => {
       if (playerInstanceRef.current && isPlayerReadyRef.current && playerInstanceRef.current.setVolume) {
@@ -137,15 +145,23 @@ const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
             controls: controls ? 1 : 0,
             modestbranding: 1,
             rel: 0,
+            mute: 1, // 시작 시 음소거로 시작하여 볼륨 스파이크 방지
           },
           events: {
             onReady: (event: any) => {
               console.log('YouTube player ready');
               isPlayerReadyRef.current = true;
+
               // 볼륨 설정
               if (event.target && event.target.setVolume) {
                 event.target.setVolume(volume);
               }
+
+              // 음소거 해제 (볼륨 설정 후)
+              if (event.target && event.target.unMute) {
+                event.target.unMute();
+              }
+
               // 시작 지점으로 이동
               if (startTime > 0 && event.target && event.target.seekTo) {
                 event.target.seekTo(startTime, true);
