@@ -13,7 +13,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -410,6 +410,14 @@ def load_songs(csv_filename: str = "songs.csv"):
     except Exception as e:
         print(f"Error loading songs: {e}")
         return 0
+
+
+@app.get("/api/image")
+async def get_image(path: str):
+    """로컬 이미지 파일 반환"""
+    if os.path.exists(path):
+        return FileResponse(path)
+    raise HTTPException(status_code=404, detail="Image not found")
 
 
 @app.get("/api/health")

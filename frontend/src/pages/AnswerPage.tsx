@@ -5,6 +5,15 @@ import YouTubePlayer from '../components/YouTubePlayer';
 import Leaderboard from '../components/Leaderboard';
 import './AnswerPage.css';
 
+const isYoutubeUrl = (url: string) => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+const getImageSrc = (url: string) => {
+  if (url.startsWith('http')) return url;
+  return `/api/image?path=${encodeURIComponent(url)}`;
+};
+
 interface Song {
   id: number;
   title: string[];  // 여러 정답 배열
@@ -88,11 +97,20 @@ function AnswerPage() {
         )}
 
         <div className="youtube-container">
-          <YouTubePlayer
-            url={song.youtube_url}
-            playing={true}
-            controls={true}
-          />
+          {!isYoutubeUrl(song.youtube_url) ? (
+            <img
+              src={getImageSrc(song.youtube_url)}
+              alt="Answer"
+              className="answer-image"
+              style={{ maxHeight: '400px', maxWidth: '100%', borderRadius: '15px' }}
+            />
+          ) : (
+            <YouTubePlayer
+              url={song.youtube_url}
+              playing={true}
+              controls={true}
+            />
+          )}
         </div>
 
         <div className="song-info">

@@ -6,6 +6,15 @@ import YouTubePlayer, { YouTubePlayerHandle } from '../components/YouTubePlayer'
 import Leaderboard from '../components/Leaderboard';
 import './GamePage.css';
 
+const isYoutubeUrl = (url: string) => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+const getImageSrc = (url: string) => {
+  if (url.startsWith('http')) return url;
+  return `/api/image?path=${encodeURIComponent(url)}`;
+};
+
 interface Song {
   id: number;
   youtube_url: string;
@@ -164,6 +173,15 @@ function GamePage() {
     }
   };
 
+  // 이미지 문제일 경우 자동 시작
+  useEffect(() => {
+    if (song && !isYoutubeUrl(song.youtube_url) && !isPlaying) {
+      setActualDuration(60);
+      startPlaying(60);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [song]);
+
   const stopPlaying = () => {
     setIsPlaying(false);
     if (timerRef.current) {
@@ -190,6 +208,13 @@ function GamePage() {
     } else {
       // progress가 100%면 시작 지점부터 다시 시작
       if (progress >= 100) {
+        // 이미지 문제인 경우 바로 시작
+        if (song && !isYoutubeUrl(song.youtube_url)) {
+          setActualDuration(60);
+          startPlaying(60);
+          return;
+        }
+
         // YouTube 플레이어를 시작 지점으로 되돌림
         if (song && youtubePlayerRef.current) {
           youtubePlayerRef.current.seekTo(song.start_time || 0);
@@ -283,10 +308,19 @@ function GamePage() {
         <h2 className="game-title">노래를 맞춰보세요!</h2>
 
         <div className="progress-container" onClick={handleTogglePlay}>
-          <CircularProgress
-            progress={progress}
-            isPlaying={isPlaying}
-          />
+          {song && !isYoutubeUrl(song.youtube_url) ? (
+            <img
+              src={getImageSrc(song.youtube_url)}
+              alt="Question"
+              className="question-image"
+              style={{ maxHeight: '300px', maxWidth: '100%', borderRadius: '10px' }}
+            />
+          ) : (
+            <CircularProgress
+              progress={progress}
+              isPlaying={isPlaying}
+            />
+          )}
         </div>
 
         <div className="info-section">
@@ -342,18 +376,20 @@ function GamePage() {
           </div>
         </div>
 
-        {/* 숨겨진 YouTube 플레이어 */}
-        <div style={{ display: 'none' }}>
-          <YouTubePlayer
-            ref={youtubePlayerRef}
-            url={song.youtube_url}
-            playing={isPlaying}
-            volume={volume}
-            startTime={song.start_time}
-            onEnded={stopPlaying}
-            onReady={onPlayerReady}
-          />
-        </div>
+        {/* 숨겨진 YouTube 플레이어 - 유튜브 URL일 때만 렌더링 */}
+        {song && isYoutubeUrl(song.youtube_url) && (
+          <div style={{ display: 'none' }}>
+            <YouTubePlayer
+              ref={youtubePlayerRef}
+              url={song.youtube_url}
+              playing={isPlaying}
+              volume={volume}
+              startTime={song.start_time}
+              onEnded={stopPlaying}
+              onReady={onPlayerReady}
+            />
+          </div>
+        )}
 
         <div className="footer-info" style={{ marginTop: '20px', fontSize: '0.8rem', textAlign: 'center', opacity: 0.7 }}>
           치지직 스트리머 <a href="https://chzzk.naver.com/577506b2d214450f65587fb04adc243a" target="_blank" rel="noopener noreferrer" style={{ color: '#00ffa3', textDecoration: 'none' }}>우소 마토</a> 제작
