@@ -345,26 +345,30 @@ function GamePage() {
         </div>
 
         <div className="controls-section">
-          <div className="volume-control">
-            <span className="volume-icon">🔊</span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={volume}
-              onChange={handleVolumeChange}
-              className="volume-slider"
-            />
-            <span className="volume-value">{volume}%</span>
-          </div>
+          {song && isYoutubeUrl(song.youtube_url) && (
+            <div className="volume-control">
+              <span className="volume-icon">🔊</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="volume-slider"
+              />
+              <span className="volume-value">{volume}%</span>
+            </div>
+          )}
 
           <div className="playback-controls">
-            <button
-              className="control-button play-pause-button"
-              onClick={handleTogglePlay}
-            >
-              {isPlaying ? '⏸ 일시정지' : '▶ 재생'}
-            </button>
+            {song && isYoutubeUrl(song.youtube_url) && (
+              <button
+                className="control-button play-pause-button"
+                onClick={handleTogglePlay}
+              >
+                {isPlaying ? '⏸ 일시정지' : '▶ 재생'}
+              </button>
+            )}
             <button
               className="control-button skip-button"
               onClick={handleSkip}

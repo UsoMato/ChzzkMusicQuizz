@@ -3,7 +3,7 @@ import './ImageReveal.css';
 
 interface ImageRevealProps {
     src: string;
-    gridSize?: number; // default 8 (8x8 = 64 tiles)
+    gridSize?: number; // default 5 (5x5 = 25 tiles)
 }
 
 const ImageReveal = ({ src, gridSize = 5 }: ImageRevealProps) => {
