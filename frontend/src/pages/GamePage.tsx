@@ -4,6 +4,7 @@ import axios from 'axios';
 import CircularProgress from '../components/CircularProgress';
 import YouTubePlayer, { YouTubePlayerHandle } from '../components/YouTubePlayer';
 import Leaderboard from '../components/Leaderboard';
+import ImageReveal from '../components/ImageReveal';
 import './GamePage.css';
 
 const isYoutubeUrl = (url: string) => {
@@ -309,11 +310,8 @@ function GamePage() {
 
         <div className="progress-container" onClick={handleTogglePlay}>
           {song && !isYoutubeUrl(song.youtube_url) ? (
-            <img
+            <ImageReveal
               src={getImageSrc(song.youtube_url)}
-              alt="Question"
-              className="question-image"
-              style={{ maxHeight: '300px', maxWidth: '100%', borderRadius: '10px' }}
             />
           ) : (
             <CircularProgress
