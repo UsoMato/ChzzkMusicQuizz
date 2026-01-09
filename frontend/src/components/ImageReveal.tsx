@@ -12,8 +12,10 @@ const ImageReveal = ({ src, gridSize = 5 }: ImageRevealProps) => {
 
     // Reset revealed tiles when image source changes
     useEffect(() => {
-        setRemovedIndices(new Set());
-    }, [src]);
+        // Reveal one random tile initially
+        const randomIndex = Math.floor(Math.random() * totalTiles);
+        setRemovedIndices(new Set([randomIndex]));
+    }, [src, totalTiles]);
 
     const handleTileClick = (e: React.MouseEvent, index: number) => {
         e.stopPropagation(); // Stop event from bubbling up to parent (which might toggle play)
