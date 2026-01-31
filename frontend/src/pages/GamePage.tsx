@@ -249,8 +249,6 @@ function GamePage() {
 
   // 정답자 체크 - 주기적으로 정답자가 있는지 확인
   useEffect(() => {
-    if (!isPlaying) return;
-
     const checkWinner = async () => {
       try {
         const response = await axios.get('/api/game/winner');
@@ -292,7 +290,7 @@ function GamePage() {
     return () => {
       clearInterval(winnerCheckInterval);
     };
-  }, [isPlaying, navigate]);
+  }, [navigate]);
 
   if (!song) {
     return (
