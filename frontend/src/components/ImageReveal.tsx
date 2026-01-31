@@ -35,10 +35,9 @@ const ImageReveal = ({ src, gridSize = 5 }: ImageRevealProps) => {
                 alt="Question"
                 style={{
                     display: 'block',
-                    maxHeight: '300px',
+                    width: '1280px',
+                    height: '720px',
                     maxWidth: '100%',
-                    width: 'auto',
-                    height: 'auto',
                     objectFit: 'contain'
                 }}
             />

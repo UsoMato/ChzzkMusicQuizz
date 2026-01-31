@@ -102,7 +102,7 @@ function AnswerPage() {
               src={getImageSrc(song.youtube_url)}
               alt="Answer"
               className="answer-image"
-              style={{ maxHeight: '400px', maxWidth: '100%', borderRadius: '15px' }}
+              style={{ width: '1280px', height: '720px', maxWidth: '100%', objectFit: 'contain', borderRadius: '15px' }}
             />
           ) : (
             <YouTubePlayer
